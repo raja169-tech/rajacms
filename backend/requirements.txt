@@ -20,13 +20,13 @@ pydantic-settings>=2.5.0         # Settings management from .env
 
 # ── File Handling ──────────────────────────────────────────────────────────────
 Pillow>=11.0.0                   # Image re-encoding, EXIF stripping
-python-magic==0.4.27             # MIME-type detection via magic bytes
+filetype==1.2.0                  # MIME-type detection (pure Python, no libmagic needed)
 
 # ── Reporting ─────────────────────────────────────────────────────────────────
 WeasyPrint==62.3                 # Server-side PDF generation from HTML templates
 openpyxl==3.1.4                  # Server-side Excel (.xlsx) generation
-Jinja2==3.1.4 
-reportlab                   # HTML templates for PDF reports
+Jinja2==3.1.4                    # HTML templates for PDF reports
+reportlab                        # PDF generation
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
 python-dotenv==1.0.1             # Load .env in development

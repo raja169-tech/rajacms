@@ -24,12 +24,13 @@ SIGNED_URL_EXPIRY_SECONDS = 300  # 5 minutes
 
 def _detect_mime(data: bytes) -> str:
     """
-    Detect MIME type from magic bytes.
-    Falls back to checking file headers manually if python-magic is unavailable.
+    Detect MIME type from magic bytes using the filetype library (pure Python).
+    Falls back to checking file headers manually if filetype is unavailable.
     """
     try:
-        import magic
-        return magic.from_buffer(data, mime=True)
+        import filetype
+        kind = filetype.guess(data)
+        return kind.mime if kind else "application/octet-stream"
     except ImportError:
         # Fallback: check common image magic bytes
         if data[:3] == b"\xff\xd8\xff":
