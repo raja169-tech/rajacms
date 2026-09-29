@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Login — CMS</title>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
+
+  <!-- No-flash theme init -->
+  <script>
+    (function () {
+      var t = localStorage.getItem('cms_theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+
+  <link rel="stylesheet" href="/assets/styles/design-tokens.css?v=3">
+  <link rel="stylesheet" href="/assets/styles/base.css?v=3">
+  <link rel="stylesheet" href="/assets/styles/components.css?v=3">
+  <style>
+    .login-settings {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+
+<body class="layout-auth">
+
+  <div class="login-settings" id="login-settings"></div>
+
+  <main class="auth-card">
+    <div class="auth-logo">
+      <img src="/assets/images/logo.jpeg" alt="CMS Logo"
+        style="width: 64px; height: 64px; border-radius: 12px; object-fit: contain; background: white; margin: 0 auto 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); display: block;">
+      <h1 class="auth-title" data-i18n="welcome">Welcome To Raja CMS</h1>
+      <p class="auth-subtitle" data-i18n="login_subtitle">Log in to manage your cash ledger</p>
+    </div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label for="login-id" class="form-label" id="login-id-label" data-i18n="username_label">Client Code or
+          Username</label>
+        <input type="text" id="login-id" class="form-input" placeholder="e.g. 100001 or admin" required
+          autocomplete="username">
+      </div>
+
+      <div class="form-group mb-6">
+        <label for="password" class="form-label" data-i18n="password_label">Password</label>
+        <input type="password" id="password" class="form-input" placeholder="••••••••" required
+          autocomplete="current-password">
+      </div>
+
+      <button type="submit" id="login-btn" class="btn btn-primary btn-lg btn-full" data-i18n="sign_in">
+        Sign In
+      </button>
+    </form>
+  </main>
+
+  <!-- Footer Credit -->
+  <div style="position: absolute; bottom: 1.5rem; left: 0; right: 0; text-align: center; font-size: 0.75rem; color: #94a3b8; letter-spacing: 0.01em;">
+    Made by <span style="color: #e53e3e; font-weight: 700;">Elvrix TechSolutions</span>™ 2026
+  </div>
+
+  <script type="module">
+    import { login, isAuthenticated, getUserRole } from '/js/core/auth.js';
+    import { toast, setLoading } from '/js/core/ui.js';
+    import { initTheme, buildThemeToggle } from '/js/core/theme.js';
+    import { buildLangPicker, applyTranslations, t } from '/js/core/i18n.js';
+
+    // Init theme
+    initTheme();
+
+    // Build settings
+    const settingsRow = document.getElementById('login-settings');
+    settingsRow.appendChild(buildLangPicker());
+    // settingsRow.appendChild(buildThemeToggle());
+
+    window.addEventListener('langchange', () => {
+      updateLabels(roleParam);
+      applyTranslations();
+    });
+
+    // Parse role from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const roleParam = urlParams.get('role');
+
+    // Update UI based on role
+    const title = document.querySelector('.auth-title');
+    const subtitle = document.querySelector('.auth-subtitle');
+    const label = document.getElementById('login-id-label');
+    const input = document.getElementById('login-id');
+
+    function updateLabels(role) {
+      if (role === 'admin') {
+        title.textContent = t('admin_login');
+        subtitle.textContent = t('admin_creds');
+        label.textContent = t('admin_username');
+        input.placeholder = 'e.g. admin';
+      } else if (role === 'employee') {
+        title.textContent = t('employee_login');
+        subtitle.textContent = t('employee_creds');
+        label.textContent = t('employee_username');
+        input.placeholder = 'e.g. employee01';
+      } else if (role === 'client') {
+        title.textContent = t('client_login');
+        subtitle.textContent = t('client_creds');
+        label.textContent = t('client_code');
+        input.placeholder = 'e.g. 100001';
+      }
+    }
+
+    updateLabels(roleParam);
+    applyTranslations();
+
+    // Auto-redirect if already logged in
+    if (isAuthenticated()) {
+      const role = getUserRole();
+      window.location.href = `/${role}/index.html`;
+    }
+
+    const form = document.getElementById('login-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const loginId = document.getElementById('login-id').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!loginId || !password) {
+        toast.error('Please enter both identifier and password');
+        return;
+      }
+
+      setLoading('#login-btn', true);
+      const res = await login(loginId, password);
+      setLoading('#login-btn', false);
+
+      if (res.success) {
+        // Force password change on first login
+        if (res.user.force_password_change) {
+          window.location.href = `/${res.user.role}/index.html#/change-password`;
+        } else {
+          window.location.href = `/${res.user.role}/index.html`;
+        }
+      } else {
+        toast.error(res.error);
+        if (res.error.includes('Too many')) {
+          document.getElementById('login-btn').disabled = true;
+        }
+      }
+    });
+
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(console.error);
+      });
+    }
+  </script>
+</body>
+
+</html>

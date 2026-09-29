@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Portal — CMS</title>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
+
+  <!-- No-flash theme init: runs before CSS so there's no flicker -->
+  <!-- <script>
+    (function(){
+      var t = localStorage.getItem('cms_theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script> -->
+
+  <link rel="stylesheet" href="/assets/styles/design-tokens.css?v=3">
+  <link rel="stylesheet" href="/assets/styles/base.css?v=3">
+  <link rel="stylesheet" href="/assets/styles/components.css?v=3">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="layout-app">
+
+  <!-- Mobile Hamburger -->
+  <button class="hamburger-btn" id="mobile-menu-btn">☰</button>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Sidebar Nav -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="/assets/images/logo.jpeg" alt="CMS Logo"
+        style="width: 40px; height: 40px; border-radius: 8px; object-fit: contain; background: white; margin-right: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <div>
+        <div class="sidebar-logo-name">Raja CMS</div>
+        <div class="sidebar-logo-sub">Raja CMS Admin</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="#/dashboard" class="nav-item" data-route="#/dashboard">📊 Dashboard</a>
+      <a href="#/queue" class="nav-item" data-route="#/queue">
+        ⏳ Txn Queue <span class="nav-badge hidden" id="nav-pending-count">0</span>
+      </a>
+
+      <div class="nav-section-label">Management</div>
+      <a href="#/clients" class="nav-item" data-route="#/clients">👥 Clients</a>
+      <a href="#/employees" class="nav-item" data-route="#/employees">🧑‍💼 Employees</a>
+      <a href="#/accounts" class="nav-item" data-route="#/accounts">🏦 Bank Accounts</a>
+
+      <div class="nav-section-label">Data</div>
+      <a href="#/reports" class="nav-item" data-route="#/reports">📥 Reports</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="btn-logout">
+        <div class="sidebar-avatar" id="avatar-initial">A</div>
+        <div>
+          <div class="sidebar-user-name" id="admin-name">Admin</div>
+          <div class="sidebar-user-role" style="font-weight: 700; color: var(--color-text-primary);">Log out</div>
+        </div>
+      </div>
+      <!-- Theme & Language row -->
+      <div class="sidebar-settings" id="sidebar-settings"></div>
+      
+      <!-- Footer Credit -->
+      <div style="text-align: center; margin-top: 1rem; font-size: 0.7rem; color: #94a3b8; letter-spacing: 0.01em;">
+        Made by <span style="color: #e53e3e; font-weight: 700;">Elvrix TechSolutions</span>™ 2026
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div id="app-root"></div>
+  </main>
+
+  <script type="module">
+    import { router } from '/js/core/router.js';
+    import { getCurrentUser, logout } from '/js/core/auth.js';
+    import { api } from '/js/core/api.js';
+
+    // Auth Check
+    const user = getCurrentUser();
+    if (!user || user.role !== 'admin') {
+      window.location.href = '/index.html';
+    } else {
+      document.getElementById('admin-name').textContent = user.display_name;
+      document.getElementById('avatar-initial').textContent = user.display_name.charAt(0).toUpperCase();
+    }
+
+    document.getElementById('btn-logout').addEventListener('click', () => logout());
+
+    // Mobile Sidebar Toggle
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const menuBtn = document.getElementById('mobile-menu-btn');
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+    }
+    menuBtn.addEventListener('click', () => {
+      sidebar.classList.add('open');
+      overlay.classList.add('visible');
+    });
+    overlay.addEventListener('click', closeSidebar);
+
+    // Close sidebar on navigation (mobile)
+    window.addEventListener('hashchange', () => {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+
+    // Global Pending Queue Polling (every 30s)
+    async function updatePendingBadge() {
+      try {
+        const res = await api.get('/api/admin/dashboard/summary');
+        const badge = document.getElementById('nav-pending-count');
+        if (res.pending_transactions > 0) {
+          badge.textContent = res.pending_transactions;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      } catch (e) { /* ignore polling errors */ }
+    }
+    updatePendingBadge();
+    setInterval(updatePendingBadge, 30000);
+
+    // Import page modules
+    import { renderDashboard } from '/js/admin/dashboard.js';
+    import { renderQueue } from '/js/admin/queue.js';
+    import { renderClients } from '/js/admin/clients.js';
+    import { renderEmployees } from '/js/admin/employees.js';
+    import { renderAccounts } from '/js/admin/accounts.js';
+    import { renderReports } from '/js/admin/reports.js';
+    import { renderChangePassword } from '/js/client/change-password.js';
+    import { initTheme, buildThemeToggle } from '/js/core/theme.js';
+    import { buildLangPicker, applyTranslations } from '/js/core/i18n.js';
+
+    // Init theme (also runs immediately via theme.js module)
+    initTheme();
+
+    // Build settings row in sidebar
+    const settingsRow = document.getElementById('sidebar-settings');
+    settingsRow.appendChild(buildLangPicker());
+    // settingsRow.appendChild(buildThemeToggle());
+
+    // Re-apply translations on language change
+    window.addEventListener('langchange', () => applyTranslations());
+    applyTranslations();
+
+    // Register routes
+    router.register('#/dashboard', renderDashboard, ['admin']);
+    router.register('#/queue', renderQueue, ['admin']);
+    router.register('#/clients', renderClients, ['admin']);
+    router.register('#/employees', renderEmployees, ['admin']);
+    router.register('#/accounts', renderAccounts, ['admin']);
+    router.register('#/reports', renderReports, ['admin']);
+    router.register('#/change-password', renderChangePassword, ['admin']);
+
+    // Start router
+    router.start('#/dashboard');
+  </script>
+</body>
+
+</html>

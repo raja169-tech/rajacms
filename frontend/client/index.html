@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>My Account — CMS</title>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
+
+  <!-- No-flash theme init: runs before CSS so there's no flicker -->
+  <!-- <script>
+    (function(){
+      var t = localStorage.getItem('cms_theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script> -->
+
+  <link rel="stylesheet" href="/assets/styles/design-tokens.css?v=3">
+  <link rel="stylesheet" href="/assets/styles/base.css?v=3">
+  <link rel="stylesheet" href="/assets/styles/components.css?v=3">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ── Client Portal Light Theme ── */
+    body.layout-client {
+      background: #f1f5f9;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* ── Top Header — Light Theme ── */
+
+    .client-header {
+      background: #faf7f7;
+      padding: 1.25rem 1.25rem 1rem;
+      position: relative;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    .client-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Logo */
+    .client-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .client-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 800;
+      color: white;
+    }
+
+    .client-logo-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+    }
+
+    /* Right Side */
+    .client-header-user {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    /* Avatar */
+    .client-header-avatar {
+      width: 34px;
+      height: 34px;
+      background: #f1f5f9;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #0f172a;
+      border: 1.5px solid #e2e8f0;
+      cursor: pointer;
+    }
+
+    /* Logout */
+    #btn-logout {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #btn-logout:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+    }
+
+    /* Settings */
+    .client-header-settings {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-right: 0.5rem;
+    }
+
+    /* Language */
+    .client-header-settings .lang-picker {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      height: 30px;
+      font-size: 0.75rem;
+      border-radius: 999px;
+      padding: 0 0.75rem;
+      cursor: pointer;
+    }
+
+    .client-header-settings .lang-picker:focus {
+      outline: none;
+      border-color: #10b981;
+    }
+
+    .client-header-settings .lang-picker option {
+      color: #0f172a;
+      background: #ffffff;
+    }
+
+    .client-header-settings .theme-toggle-btn {
+      background: rgba(255, 255, 255, 0.1) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      color: white !important;
+      height: 30px !important;
+      width: 30px !important;
+      border-radius: 50% !important;
+      font-size: 0.9rem !important;
+    }
+
+    @media (max-width: 320px) {
+
+      .client-header {
+        padding: 0.85rem 0.75rem 1rem;
+      }
+
+      .client-header-user {
+        gap: 0.35rem;
+      }
+
+      .client-logo {
+        gap: 0.35rem;
+      }
+
+      .client-logo-icon {
+        width: 29px;
+        height: 29px;
+        font-size: 0.85rem;
+      }
+
+      .client-logo-name {
+        font-size: 0.9rem;
+      }
+
+      .client-header-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+      }
+
+      #btn-logout {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.35rem;
+      }
+
+      .client-header-settings {
+        margin-right: 0;
+        gap: 0.25rem;
+      }
+
+      .client-header-settings .lang-picker {
+        height: 28px;
+        font-size: 0.65rem;
+        /* padding: 0 0.5rem; */
+        max-width: 45px;
+
+      }
+    }
+
+
+    /* ── Main Content Area ── */
+    .client-content {
+      flex: 1;
+      padding: 0 1rem 6rem;
+      margin-top: -1.5rem;
+      /* Pull content over the header gradient */
+    }
+
+    /* ── Bottom Tab Bar ── */
+    .client-tabbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      z-index: 100;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 0;
+      text-decoration: none;
+      color: #94a3b8;
+      font-size: 0.65rem;
+      font-weight: 600;
+      gap: 3px;
+      transition: color 0.2s;
+    }
+
+    .tab-item .tab-icon {
+      font-size: 1.35rem;
+      line-height: 1;
+      transition: transform 0.2s;
+    }
+
+    .tab-item.active {
+      color: #10b981;
+    }
+
+    .tab-item.active .tab-icon {
+      transform: scale(1.1);
+    }
+
+    /* ── Overrides for light client UI ── */
+    .client-card {
+      background: white;
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.03);
+    }
+
+    .client-section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+
+<body class="layout-client">
+
+  <!-- Header -->
+  <header class="client-header">
+    <div class="client-header-row">
+      <div class="client-logo">
+
+
+        <img src="/assets/images/logo.jpeg" alt="CMS Logo"
+          style="width: 32px; height: 32px; border-radius: 6px; object-fit: contain; background: white; margin-right: 12px;">
+        <span class="client-logo-name">Raja CMS</span>
+
+      </div>
+      <div class="client-header-user">
+        <div class="client-header-settings" id="client-settings"></div>
+        <div class="client-header-avatar" id="client-avatar">U</div>
+        <button id="btn-logout">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="client-content">
+    <div id="app-root"></div>
+  </main>
+
+  <!-- Bottom Tab Bar -->
+  <nav class="client-tabbar">
+    <a href="#/dashboard" class="tab-item" data-route="#/dashboard">
+      <span class="tab-icon">🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="#/pay-in" class="tab-item" data-route="#/pay-in">
+      <span class="tab-icon">⬇️</span>
+      <span>Deposit</span>
+    </a>
+    <a href="#/pay-out" class="tab-item" data-route="#/pay-out">
+      <span class="tab-icon">⬆️</span>
+      <span>Withdraw</span>
+    </a>
+    <a href="#/change-password" class="tab-item" data-route="#/change-password">
+      <span class="tab-icon">⚙️</span>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <script type="module">
+    import { router } from '/js/core/router.js';
+    import { getCurrentUser, logout } from '/js/core/auth.js';
+
+    // Auth check
+    const user = getCurrentUser();
+    if (!user || user.role !== 'client') {
+      window.location.href = '/index.html';
+    } else {
+      document.getElementById('client-avatar').textContent = user.display_name.charAt(0).toUpperCase();
+    }
+
+    document.getElementById('btn-logout').addEventListener('click', () => logout());
+
+    // Active tab highlight
+    function updateActiveTab() {
+      const hash = window.location.hash || '#/dashboard';
+      document.querySelectorAll('.tab-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.route === hash);
+      });
+    }
+    window.addEventListener('hashchange', updateActiveTab);
+    updateActiveTab();
+
+    import { renderDashboard } from '/js/client/dashboard.js';
+    import { renderPayIn } from '/js/client/pay-in.js';
+    import { renderPayOut } from '/js/client/pay-out.js';
+    import { renderChangePassword } from '/js/client/change-password.js';
+    import { initTheme, buildThemeToggle } from '/js/core/theme.js';
+    import { buildLangPicker, applyTranslations } from '/js/core/i18n.js';
+
+    // Init theme
+    initTheme();
+
+    // Build settings
+    const settingsRow = document.getElementById('client-settings');
+    settingsRow.appendChild(buildLangPicker());
+    // settingsRow.appendChild(buildThemeToggle());
+
+    window.addEventListener('langchange', () => applyTranslations());
+    applyTranslations();
+
+    // Register routes
+    router.register('#/dashboard', renderDashboard, ['client']);
+    router.register('#/pay-in', renderPayIn, ['client']);
+    router.register('#/pay-out', renderPayOut, ['client']);
+    router.register('#/change-password', renderChangePassword, ['client']);
+
+    // Start router
+    router.start('#/dashboard');
+  </script>
+</body>
+
+</html>

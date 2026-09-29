@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CMS — Choose Portal</title>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
+
+  <!-- No-flash theme init: runs before CSS so there's no flicker -->
+  <!-- <script>
+    (function () {
+      var t = localStorage.getItem('cms_theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script> -->
+
+  <link rel="stylesheet" href="/assets/styles/design-tokens.css?v=3">
+  <link rel="stylesheet" href="/assets/styles/base.css?v=3">
+  <link rel="stylesheet" href="/assets/styles/components.css?v=3">
+
+  <style>
+    /* Vibrant Light UI Overrides for Landing Page */
+    :root {
+      --landing-surface: var(--color-bg-surface);
+      --landing-text-main: var(--color-text-primary);
+      --landing-text-sub: var(--color-text-secondary);
+      --landing-border: var(--color-border);
+      --landing-shadow: var(--shadow-lg);
+    }
+
+    body.layout-landing {
+      background-color: var(--color-bg-base);
+      background-image:
+        radial-gradient(at 0% 0%,
+          var(--color-bg-elevated) 0px,
+          transparent 50%),
+        radial-gradient(at 100% 0%,
+          var(--color-bg-hover) 0px,
+          transparent 50%),
+        radial-gradient(at 100% 100%,
+          var(--color-danger-dim) 0px,
+          transparent 50%),
+        radial-gradient(at 0% 100%,
+          var(--color-bg-elevated) 0px,
+          transparent 50%);
+
+      background-attachment: fixed;
+      color: var(--landing-text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+      font-family: var(--font-family);
+    }
+
+    .landing-card {
+      /* Glassmorphism effect */
+      background: var(--landing-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--landing-border);
+      border-radius: 2rem;
+      padding: 3.5rem 3rem;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: var(--landing-shadow);
+      text-align: center;
+      animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .landing-logo-icon {
+      /* Vibrant gradient for the logo */
+      background: linear-gradient(135deg, #F62440 0%, #d91030 100%);
+      color: white;
+      width: 80px;
+      height: 80px;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.75rem;
+      font-weight: 800;
+      margin: 0 auto 1.5rem;
+      box-shadow: 0 10px 25px rgba(246, 36, 64, 0.4);
+      transform: rotate(-5deg);
+      transition: transform 0.3s ease;
+    }
+
+    .landing-logo-icon:hover {
+      transform: rotate(0deg) scale(1.05);
+    }
+
+    .landing-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+      color: var(--color-text-primary);
+    }
+
+    .landing-subtitle {
+      color: var(--landing-text-sub);
+      font-size: 1rem;
+      margin-bottom: 3rem;
+      font-weight: 500;
+    }
+
+    .landing-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .landing-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      background: var(--color-bg-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+      border-radius: 1rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .landing-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Client Button */
+    .landing-btn.client::before {
+      background: var(--color-bg-elevated);
+    }
+
+    .landing-btn.client:hover {
+      border-color: #d97706;
+      color: #b45309;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(217, 119, 6, 0.15);
+    }
+
+    .landing-btn.client:hover::before {
+      opacity: 1;
+    }
+
+    /* Employee Button */
+    .landing-btn.employee::before {
+      background: var(--color-bg-hover);
+    }
+
+    .landing-btn.employee:hover {
+      border-color: #d97706;
+      color: #b45309;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(217, 119, 6, 0.15);
+    }
+
+    .landing-btn.employee:hover::before {
+      opacity: 1;
+    }
+
+    /* Admin Button */
+
+    .landing-btn.admin::before {
+      background: var(--color-danger-dim);
+    }
+
+    .landing-btn.admin:hover {
+      border-color: #F62440;
+      color: #be123c;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(246, 36, 64, 0.15);
+    }
+
+    .landing-btn.admin:hover::before {
+      opacity: 1;
+    }
+
+    .btn-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-icon {
+      font-size: 1.5rem;
+      background: var(--color-bg-elevated);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-arrow {
+      opacity: 0.4;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .landing-btn:hover .btn-arrow {
+      opacity: 1;
+      transform: translateX(4px);
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .landing-settings {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      z-index: 1000;
+    }
+
+    /* ============================================================
+   RESPONSIVE — Landing / Welcome Page
+   ============================================================ */
+
+    /* Tablet */
+    @media (max-width: 768px) {
+
+      body.layout-landing {
+        padding: 1rem;
+      }
+
+      .landing-settings {
+        top: 0.6rem;
+        right: 0.6rem;
+        gap: 0.3rem;
+      }
+
+      .landing-card {
+        margin-top: 3.25rem;
+      }
+
+      .landing-logo-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 2.4rem;
+        border-radius: 20px;
+        margin-bottom: 1.25rem;
+      }
+
+      .landing-title {
+        font-size: 1.75rem;
+      }
+
+      .landing-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 2.25rem;
+      }
+
+      .landing-options {
+        gap: 1rem;
+      }
+
+      .landing-btn {
+        padding: 1.1rem 1.25rem;
+        font-size: 1rem;
+      }
+
+      .btn-left {
+        gap: 0.8rem;
+      }
+
+      .btn-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1.35rem;
+      }
+    }
+
+
+    /* Mobile */
+    @media (max-width: 480px) {
+
+      body.layout-landing {
+        padding: 0.75rem;
+        align-items: center;
+      }
+
+      .landing-settings {
+        top: 0.75rem;
+        right: 0.75rem;
+        gap: 0.35rem;
+      }
+
+      .landing-card {
+        width: 100%;
+        max-width: 100%;
+        padding: 2.5rem 1.25rem;
+        border-radius: 1.25rem;
+      }
+
+      .landing-logo-icon {
+        width: 64px;
+        height: 64px;
+        font-size: 2.1rem;
+        border-radius: 18px;
+        margin-bottom: 1rem;
+      }
+
+      .landing-title {
+        font-size: 1.5rem;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.4rem;
+      }
+
+      .landing-subtitle {
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin-bottom: 1.75rem;
+      }
+
+      .landing-options {
+        gap: 0.85rem;
+      }
+
+      .landing-btn {
+        padding: 0.9rem 1rem;
+        min-height: 62px;
+        border-radius: 0.85rem;
+        font-size: 0.95rem;
+      }
+
+      .btn-left {
+        gap: 0.7rem;
+      }
+
+      .btn-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        font-size: 1.2rem;
+        border-radius: 9px;
+      }
+
+      .btn-arrow {
+        font-size: 1rem;
+      }
+    }
+
+
+    /* Very Small Mobile */
+    @media (max-width: 360px) {
+
+      body.layout-landing {
+        padding: 0.5rem;
+      }
+
+      .landing-card {
+        padding: 2rem 1rem;
+        border-radius: 1rem;
+      }
+
+      .landing-logo-icon {
+        width: 58px;
+        height: 58px;
+        font-size: 1.9rem;
+      }
+
+      .landing-title {
+        font-size: 1.35rem;
+      }
+
+      .landing-subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .landing-btn {
+        padding: 0.8rem 0.85rem;
+        min-height: 58px;
+        font-size: 0.875rem;
+      }
+
+      .btn-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        font-size: 1.05rem;
+      }
+
+      .btn-left {
+        gap: 0.55rem;
+      }
+    }
+
+
+    /* Touch Devices
+   Remove hover movement on mobile to avoid sticky hover effects */
+    @media (hover: none) and (pointer: coarse) {
+
+      .landing-logo-icon:hover {
+        transform: rotate(-5deg);
+      }
+
+      .landing-btn:hover {
+        transform: none;
+      }
+
+      .landing-btn:hover .btn-arrow {
+        transform: none;
+      }
+
+      .landing-btn:active {
+        transform: scale(0.98);
+      }
+    }
+  </style>
+</head>
+
+<body class="layout-landing">
+
+  <div class="landing-settings" id="landing-settings"></div>
+
+  <main class="landing-card">
+    <img src="/assets/images/logo.jpeg" alt="CMS Logo"
+      style="margin:auto; width: 64px; height: 64px; border-radius: 16px; object-fit: contain; background: white; margin-bottom: 24px; box-shadow: 0 12px 32px rgba(0,0,0,0.1);">
+    <h1 class="landing-title" data-i18n="welcome">Welcome to Raja CMS</h1>
+    <p class="landing-subtitle" data-i18n="login_subtitle">Select your portal to continue</p>
+
+    <div class="landing-options">
+      <a href="/login.html?role=client" class="landing-btn client">
+        <div class="btn-left">
+          <span class="btn-icon">👤</span>
+          <span data-i18n="client_login">Login as User</span>
+        </div>
+        <span class="btn-arrow">→</span>
+      </a>
+
+      <a href="/login.html?role=employee" class="landing-btn employee">
+        <div class="btn-left">
+          <span class="btn-icon">💼</span>
+          <span data-i18n="employee_login">Login as Employee</span>
+        </div>
+        <span class="btn-arrow">→</span>
+      </a>
+
+      <a href="/login.html?role=admin" class="landing-btn admin">
+        <div class="btn-left">
+          <span class="btn-icon">🛡️</span>
+          <span data-i18n="admin_login">Login as Admin</span>
+        </div>
+        <span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer Credit -->
+  <div style="position: absolute; bottom: 1.5rem; left: 0; right: 0; text-align: center; font-size: 0.75rem; color: var(--landing-text-sub); letter-spacing: 0.01em;">
+    Made by <span style="color: #e53e3e; font-weight: 700;">Elvrix TechSolutions</span>™ 2026
+  </div>
+
+  <script type="module">
+    import { isAuthenticated, getUserRole } from '/js/core/auth.js';
+    import { initTheme, buildThemeToggle } from '/js/core/theme.js';
+    import { buildLangPicker, applyTranslations } from '/js/core/i18n.js';
+
+    // Init theme
+    //initTheme();
+
+    // Build settings
+    const settingsRow = document.getElementById('landing-settings');
+    settingsRow.appendChild(buildLangPicker());
+    // settingsRow.appendChild(buildThemeToggle());
+
+    window.addEventListener('langchange', () => applyTranslations());
+    applyTranslations();
+
+    // Auto-redirect if already logged in
+    if (isAuthenticated()) {
+      const role = getUserRole();
+      window.location.href = `/${role}/index.html`;
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(console.error);
+      });
+    }
+  </script>
+</body>
+
+</html>

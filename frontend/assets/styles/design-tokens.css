@@ -1,0 +1,153 @@
+/* ============================================================
+   design-tokens.css — CMS PWA Design System Tokens
+   Theme: Warm Cream & Crimson Red  |  Dark Mode supported
+   Font: Inter (Google Fonts)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* ── Color Palette — Warm Cream & Crimson (LIGHT) ──────────── */
+  --color-bg-base:        #FFFAF3;
+  --color-bg-surface:     #FFFFFF;
+  --color-bg-elevated:    #FFF2DB;
+  --color-bg-hover:       #FFE5BF;
+  --color-bg-subtle:      #FFE5BF;
+
+  --color-border:         #f0d9b5;
+  --color-border-strong:  #e4c48a;
+
+  /* ── Primary Accent: Crimson Red ────────────────────────────── */
+  --color-accent:         #F62440;
+  --color-accent-hover:   #d91030;
+  --color-accent-dim:     rgba(246, 36, 64, 0.1);
+  --color-accent-glow:    rgba(246, 36, 64, 0.25);
+
+  /* ── Semantic Colors ────────────────────────────────────────── */
+  --color-success:        #16a34a;
+  --color-success-dim:    rgba(22, 163, 74, 0.1);
+  --color-warning:        #d97706;
+  --color-warning-dim:    rgba(217, 119, 6, 0.1);
+  --color-danger:         #F62440;
+  --color-danger-dim:     rgba(246, 36, 64, 0.1);
+  --color-info:           #2563eb;
+  --color-info-dim:       rgba(37, 99, 235, 0.1);
+
+  /* ── Text ───────────────────────────────────────────────────── */
+  --color-text-primary:   #1a0a00;
+  --color-text-secondary: #7a5c3a;
+  --color-text-tertiary:  #a8855a;
+  --color-text-accent:    #F62440;
+
+  /* ── Typography ─────────────────────────────────────────────── */
+  --font-family:          'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:            'JetBrains Mono', 'Fira Code', monospace;
+
+  --font-size-xs:         0.75rem;
+  --font-size-sm:         0.875rem;
+  --font-size-base:       1rem;
+  --font-size-md:         1.0625rem;
+  --font-size-lg:         1.125rem;
+  --font-size-xl:         1.25rem;
+  --font-size-2xl:        1.5rem;
+  --font-size-3xl:        1.875rem;
+  --font-size-4xl:        2.25rem;
+
+  --font-weight-normal:   400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+  --font-weight-extrabold:800;
+
+  --line-height-tight:    1.25;
+  --line-height-normal:   1.5;
+  --line-height-relaxed:  1.75;
+
+  /* ── Spacing ─────────────────────────────────────────────────── */
+  --space-1:   0.25rem;
+  --space-2:   0.5rem;
+  --space-3:   0.75rem;
+  --space-4:   1rem;
+  --space-5:   1.25rem;
+  --space-6:   1.5rem;
+  --space-8:   2rem;
+  --space-10:  2.5rem;
+  --space-12:  3rem;
+  --space-16:  4rem;
+
+  /* ── Border Radius ───────────────────────────────────────────── */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ─────────────────────────────────────────────────── */
+  --shadow-sm:    0 1px 4px rgba(180, 100, 40, 0.08), 0 1px 2px rgba(180, 100, 40, 0.05);
+  --shadow-md:    0 4px 16px rgba(180, 100, 40, 0.1), 0 2px 6px rgba(180, 100, 40, 0.06);
+  --shadow-lg:    0 10px 40px rgba(180, 100, 40, 0.15), 0 4px 16px rgba(180, 100, 40, 0.08);
+  --shadow-glow:  0 0 20px rgba(246, 36, 64, 0.2);
+
+  /* ── Transitions ─────────────────────────────────────────────── */
+  --transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow:   400ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Z-index Layers ──────────────────────────────────────────── */
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-modal:    300;
+  --z-toast:    400;
+
+  /* ── Layout ──────────────────────────────────────────────────── */
+  --sidebar-width:     260px;
+  --topbar-height:     64px;
+  --content-max-width: 1200px;
+
+  /* ── Sidebar ─────────────────────────────────────────────────── */
+ --sidebar-bg: #ffffff;
+--sidebar-text: #1a0a00;
+--sidebar-text-muted: #7a6a5a;
+  --sidebar-active-bg: rgba(246, 36, 64, 0.10);
+  --sidebar-active-text: #F62440;
+
+  --sidebar-hover-bg: rgba(246, 36, 64, 0.06);
+
+  --sidebar-border: #e8ddd3;
+}
+
+/* ============================================================
+   DARK MODE — activated via [data-theme="dark"] on <html>
+   Applied automatically by /js/core/theme.js
+   ============================================================ */
+[data-theme="dark"] {
+  --color-bg-base:        #0f0d0b;
+  --color-bg-surface:     #1c1815;
+  --color-bg-elevated:    #252018;
+  --color-bg-hover:       #2e2720;
+  --color-bg-subtle:      #2e2720;
+
+  --color-border:         #3a2e22;
+  --color-border-strong:  #4d3d2c;
+
+  --color-text-primary:   #f5e6d0;
+  --color-text-secondary: #c9a87a;
+  --color-text-tertiary:  #8a6a4a;
+
+  --color-success-dim:    rgba(22, 163, 74, 0.18);
+  --color-warning-dim:    rgba(217, 119, 6, 0.18);
+  --color-danger-dim:     rgba(246, 36, 64, 0.18);
+  --color-info-dim:       rgba(37, 99, 235, 0.18);
+
+  --shadow-sm:    0 1px 4px rgba(0, 0, 0, 0.5);
+  --shadow-md:    0 4px 16px rgba(0, 0, 0, 0.55);
+  --shadow-lg:    0 10px 40px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.45);
+
+  --sidebar-bg:           #120c07;
+  --sidebar-text:         #f5e6d0;
+  --sidebar-text-muted:   rgba(245, 230, 208, 0.42);
+  --sidebar-active-bg:    rgba(246, 36, 64, 0.2);
+  --sidebar-active-text:  #F62440;
+  --sidebar-hover-bg:     rgba(255, 245, 220, 0.05);
+  --sidebar-border:       rgba(255, 245, 220, 0.06);
+}
