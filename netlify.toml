@@ -1,0 +1,27 @@
+[build]
+  # Static frontend only — the FastAPI backend runs on Render.
+  publish = "frontend"
+  command = ""
+
+# Proxy API calls to the FastAPI backend so the frontend can keep using same-origin /api paths.
+[[redirects]]
+  from = "/api/*"
+  to = "https://rajacms.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# SPA fallbacks for each role's hash-routed app.
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/employee/*"
+  to = "/employee/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/client/*"
+  to = "/client/index.html"
+  status = 200
