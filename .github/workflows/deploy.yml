@@ -26,19 +26,10 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # If your frontend uses Node/npm (React, Vite, PWA, etc.)
-      - name: Install dependencies & Build
-        run: |
-          cd frontend
-          npm ci || npm install
-          npm run build || echo "No build script, using raw files"
-
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Change to 'frontend/dist' or 'frontend/build' if using React/Vite. 
-          # Use 'frontend' if it is plain HTML/CSS/JS.
-          path: 'frontend/dist' 
+          path: 'frontend'
 
       - name: Deploy to GitHub Pages
         id: deployment
