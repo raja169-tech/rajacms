@@ -96,11 +96,11 @@ async function request(method, path, options = {}) {
       if (contentType.includes('application/json')) {
         const err = await res.json();
         errorDetail = err.detail || errorDetail;
-        errorCode   = err.code   || errorCode;
+        errorCode = err.code || errorCode;
       }
     } catch { /* ignore */ }
     const error = new Error(errorDetail);
-    error.code   = errorCode;
+    error.code = errorCode;
     error.status = res.status;
     throw error;
   }
@@ -123,10 +123,10 @@ async function request(method, path, options = {}) {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export const api = {
-  get:    (path, opts)  => request('GET',    path, opts),
-  post:   (path, body, opts) => request('POST',   path, { ...opts, body }),
-  patch:  (path, body, opts) => request('PATCH',  path, { ...opts, body }),
-  delete: (path, opts)  => request('DELETE', path, opts),
+  get: (path, opts) => request('GET', path, opts),
+  post: (path, body, opts) => request('POST', path, { ...opts, body }),
+  patch: (path, body, opts) => request('PATCH', path, { ...opts, body }),
+  delete: (path, opts) => request('DELETE', path, opts),
 
   /** Upload multipart/form-data (for proof images) */
   upload: (path, formData) => request('POST', path, { body: formData, isFormData: true }),
