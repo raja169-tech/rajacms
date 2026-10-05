@@ -98,13 +98,8 @@ async def list_transactions(
         "*, users!client_id(display_name, client_code)",
         count="exact"
     )
-    if transaction_status == "pending":
-        # Employees only see truly pending items — not ones they already marked
-        query = query.eq("status", "pending")
-    elif transaction_status:
+    if transaction_status:
         query = query.eq("status", transaction_status)
-    else:
-
     if client_id:
         query = query.eq("client_id", client_id)
     if txn_type:
