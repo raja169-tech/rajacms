@@ -1,7 +1,7 @@
 """
 routers/employee.py — Employee routes (subset of admin).
 
-Employees can: view all clients/transactions, approve/reject, generate reports.
+Employees can: view all clients/transactions (read-only) and generate reports. Only Admins can approve/reject.
 Employees CANNOT: create/edit/delete clients, change fee %, manage bank accounts.
 
 All shared business logic reuses the same service functions as admin.
@@ -15,7 +15,6 @@ from typing import Optional
 
 from auth.dependencies import require_role
 from database import get_supabase
-from services.transaction_service import approve_pay_in, approve_pay_out, reject_transaction
 from services.report_service import fetch_approved_transactions, generate_pdf, generate_excel, _parse_range
 
 router = APIRouter(prefix="/api/employee", tags=["employee"])
@@ -105,9 +104,7 @@ async def list_transactions(
     elif transaction_status:
         query = query.eq("status", transaction_status)
     else:
-        # Without a filter, exclude 'employee_approved' from employee view
-        # (they've already actioned these; admin handles next step)
-        query = query.neq("status", "employee_approved")
+
     if client_id:
         query = query.eq("client_id", client_id)
     if txn_type:
@@ -124,51 +121,6 @@ async def list_transactions(
         txns.append(t)
     return {"transactions": txns, "total": result.count or 0, "page": page}
 
-
-@router.post("/transactions/{txn_id}/approve")
-async def approve_transaction(
-    txn_id: str,
-    body: ApproveRequest,
-    request: Request,
-    current_user: dict = StaffUser,
-):
-    db = get_supabase()
-    txn = db.table("transactions").select("type").eq("id", txn_id).maybe_single().execute()
-    if not txn.data:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-
-    if txn.data["type"] == "pay_in":
-        return await approve_pay_in(
-            txn_id=txn_id,
-            actor_id=current_user["sub"],
-            actor_role=current_user["role"],
-            admin_notes=body.admin_notes,
-            ip_address=request.client.host if request.client else None,
-        )
-    else:
-        return await approve_pay_out(
-            txn_id=txn_id,
-            actor_id=current_user["sub"],
-            actor_role=current_user["role"],
-            admin_notes=body.admin_notes,
-            ip_address=request.client.host if request.client else None,
-        )
-
-
-@router.post("/transactions/{txn_id}/reject")
-async def reject_transaction_endpoint(
-    txn_id: str,
-    body: RejectRequest,
-    request: Request,
-    current_user: dict = StaffUser,
-):
-    return await reject_transaction(
-        txn_id=txn_id,
-        reason=body.reason,
-        actor_id=current_user["sub"],
-        actor_role=current_user["role"],
-        ip_address=request.client.host if request.client else None,
-    )
 
 
 @router.get("/transactions/{txn_id}/proof-url")
@@ -239,3 +191,5 @@ async def export_report(
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": f'attachment; filename="cms-report-{range}.xlsx"'},
         )
+
+

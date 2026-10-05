@@ -22,8 +22,8 @@ export async function renderQueue() {
     </div>
 
     <div class="alert-banner info mb-6">
-      <div class="alert-icon">ℹ</div>
-      <div class="alert-text">Carefully verify payment proofs against bank statements before approving Pay-Ins. Withdrawals must be transferred before marking as approved.</div>
+      <div class="alert-icon">???</div>
+      <div class="alert-text">You can view all transactions and download reports. Only Admins can approve or reject transactions.</div>
     </div>
 
     <div class="table-wrapper">
@@ -79,14 +79,12 @@ export async function renderQueue() {
           <input type="hidden" id="r-id">
           
           <div class="form-group mb-6">
-            <label class="form-label">Verification Notes</label>
+            <label class="form-label">Notes</label>
             <textarea id="r-notes" class="form-textarea" placeholder="Add a note..."></textarea>
           </div>
 
           <div class="modal-actions" id="review-actions">
-            <button type="button" class="btn btn-ghost" onclick="closeReviewModal()">Cancel</button>
-            <button type="button" class="btn btn-danger" onclick="submitReview('reject')">Reject</button>
-            <button type="button" class="btn btn-primary" onclick="submitReview('approve')">Approve</button>
+            <button type="button" class="btn btn-ghost" onclick="closeReviewModal()">Close</button>
           </div>
         </form>
       </div>
@@ -205,7 +203,7 @@ async function loadQueue() {
           <td><span class="badge badge-${t.status}">${t.status}</span></td>
           <td class="text-right">
             <button class="btn btn-sm btn-secondary" onclick="openReviewModal('${encoded}')">
-              ${t.status === 'pending' ? 'Verify' : 'View'}
+              View
             </button>
           </td>
         </tr>
@@ -223,3 +221,4 @@ async function loadQueue() {
     tbody.innerHTML = `<tr><td colspan="6" class="text-danger text-center py-4">Failed to load queue.</td></tr>`;
   }
 }
+
