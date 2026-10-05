@@ -21,13 +21,6 @@ router = APIRouter(prefix="/api/employee", tags=["employee"])
 StaffUser = Depends(require_role(["admin", "employee"]))
 
 
-class ApproveRequest(BaseModel):
-    admin_notes: Optional[str] = None
-
-
-class RejectRequest(BaseModel):
-    reason: str = Field(..., min_length=1, max_length=500)
-
 
 # ─── Dashboard ────────────────────────────────────────────────────────────────
 
