@@ -247,7 +247,7 @@ async def approve_pay_in(
 
     Uses conditional update (WHERE status='pending') for concurrency safety.
     Re-validates account_limit and bank_capacity at approval time.
-    Sets matures_at = processed_at + 24 hours using DB server clock.
+    Sets matures_at = next midnight IST after approval time.
     """
     db = get_supabase()
 
@@ -296,12 +296,20 @@ async def approve_pay_in(
 
     approved_txn = result.data[0]
 
-    # Calculate matures_at = processed_at + 24h in Python only if fully approved
+    # Calculate matures_at = next midnight IST after approval time
     matures_at = None
     if new_status == "approved":
         from datetime import timedelta
+        # IST = UTC+5:30
+        IST = timezone(timedelta(hours=5, minutes=30))
         processed_at = datetime.fromisoformat(now_iso)
-        matures_at = (processed_at + timedelta(hours=24)).isoformat()
+        processed_at_ist = processed_at.astimezone(IST)
+        # Next midnight in IST = start of the next calendar day in IST
+        next_midnight_ist = (processed_at_ist + timedelta(days=1)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        # Store as UTC ISO string
+        matures_at = next_midnight_ist.astimezone(timezone.utc).isoformat()
         db.table("transactions").update({"matures_at": matures_at}).eq("id", txn_id).execute()
         approved_txn["matures_at"] = matures_at
 
@@ -469,3 +477,5 @@ async def approve_pay_out(
         ip_address=ip_address,
     )
     return result.data[0]
+
+
