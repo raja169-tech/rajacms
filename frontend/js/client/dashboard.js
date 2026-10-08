@@ -92,7 +92,7 @@ export async function renderDashboard() {
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
       <div class="client-section-title" style="margin-bottom: 0;">Recent Transactions</div>
       <button onclick="downloadClientReport()" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-        <span style="font-size: 1rem;">??</span> Download PDF
+        <span style="font-size: 1rem;">&#x2B07;&#xFE0F;</span> Download PDF
       </button>
     </div>
     <div id="tx-list">
@@ -120,9 +120,9 @@ export async function renderDashboard() {
     data.recent_transactions.forEach(tx => {
       if ((tx.status === 'approved' || tx.status === 'rejected') && !notifiedTxns.includes(tx.id)) {
         if (tx.status === 'approved') {
-            toast.success('Your ' + (tx.type === 'pay_in' ? 'Deposit' : 'Withdrawal') + ' of ₹' + tx.gross_amount + ' has been approved!');
+            toast.success('Your ' + (tx.type === 'pay_in' ? 'Deposit' : 'Withdrawal') + ' of \u20B9' + tx.gross_amount + ' has been approved!');
         } else {
-            toast.error('Your ' + (tx.type === 'pay_in' ? 'Deposit' : 'Withdrawal') + ' of ₹' + tx.gross_amount + ' was declined.');
+            toast.error('Your ' + (tx.type === 'pay_in' ? 'Deposit' : 'Withdrawal') + ' of \u20B9' + tx.gross_amount + ' was declined.');
         }
         notifiedTxns.push(tx.id);
         newNotifications = true;
@@ -140,7 +140,7 @@ export async function renderDashboard() {
     if (data.has_stale_pending) {
       document.getElementById('stale-alert-container').innerHTML = `
         <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 0.75rem; padding: 0.9rem 1rem; margin-bottom: 1rem; display: flex; gap: 0.75rem; align-items: flex-start;">
-          <span style="font-size: 1.2rem;">âš ï¸</span>
+          <span style="font-size: 1.2rem;">&#x26A0;&#xFE0F;</span>
           <div style="font-size: 0.8rem; color: #92400e; font-weight: 500;">You have Pay-In requests pending for over 12 hours. Please contact support.</div>
         </div>
       `;
