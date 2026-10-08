@@ -20,6 +20,10 @@ from services.transaction_service import (
 from services.bank_account_service import get_eligible_accounts_for_client
 from services.storage_service import upload_proof
 
+from datetime import datetime, timezone
+from fastapi.responses import Response
+from services.report_service import fetch_approved_transactions, generate_pdf, _parse_range
+
 router = APIRouter(prefix="/api/client", tags=["client"])
 ClientUser = Depends(require_role(["client"]))
 
@@ -198,3 +202,26 @@ async def get_transaction_history(
         "page": page,
         "per_page": per_page,
     }
+
+# ==========================================
+# Export Report
+# ==========================================
+
+@router.get("/export")
+async def export_client_report(
+    range: str = Query("30d"),
+    current_user: dict = ClientUser,
+):
+    start, end = _parse_range(range)
+    client_id = current_user["sub"]
+    transactions = fetch_approved_transactions(start, end, client_id=client_id)
+    db = get_supabase()
+    actor = db.table("users").select("display_name").eq("id", client_id).maybe_single().execute()
+    generated_by = actor.data["display_name"] if actor.data else "Client"
+
+    pdf_bytes = generate_pdf(transactions, start, end, generated_by, show_fees=False)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="my-transactions-{range}.pdf"'},
+    )

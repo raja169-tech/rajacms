@@ -89,7 +89,12 @@ export async function renderDashboard() {
     </div>
 
     <!-- Recent Transactions -->
-    <div class="client-section-title">Recent Transactions</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <div class="client-section-title" style="margin-bottom: 0;">Recent Transactions</div>
+      <button onclick="downloadClientReport()" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+        <span style="font-size: 1rem;">??</span> Download PDF
+      </button>
+    </div>
     <div id="tx-list">
       <div class="client-card mb-3" style="height: 64px; background: linear-gradient(90deg, #f1f5f9, #e2e8f0, #f1f5f9); background-size: 200%; animation: shimmer 1.5s infinite;"></div>
       <div class="client-card mb-3" style="height: 64px; background: linear-gradient(90deg, #f1f5f9, #e2e8f0, #f1f5f9); background-size: 200%; animation: shimmer 1.5s infinite;"></div>
@@ -107,6 +112,26 @@ export async function renderDashboard() {
 
   try {
     const data = await api.get('/api/client/dashboard');
+
+    // Notification Alert Logic
+    const notifiedTxns = JSON.parse(localStorage.getItem('notifiedTxns') || '[]');
+    let newNotifications = false;
+    
+    data.recent_transactions.forEach(tx => {
+      if ((tx.status === 'approved' || tx.status === 'rejected') && !notifiedTxns.includes(tx.id)) {
+        if (tx.status === 'approved') {
+            toast.success(Your  + (tx.type === 'pay_in' ? 'Deposit' : 'Withdrawal') +  of ? + tx.gross_amount +  has been approved!);
+        } else {
+            toast.error(Your  + (tx.type === 'pay_in' ? 'Deposit' : 'Withdrawal') +  of ? + tx.gross_amount +  was declined.);
+        }
+        notifiedTxns.push(tx.id);
+        newNotifications = true;
+      }
+    });
+
+    if (newNotifications) {
+      localStorage.setItem('notifiedTxns', JSON.stringify(notifiedTxns));
+    }
 
     // Greeting
     document.getElementById('greeting-name').textContent = user.display_name || 'Client';
@@ -214,3 +239,26 @@ export async function renderDashboard() {
     `;
   }
 }
+
+  window.downloadClientReport = async () => {
+    try {
+      toast.info('Generating PDF report...');
+      const res = await fetch('/api/client/export?range=30d', {
+        headers: { 'Authorization': Bearer  + store.getToken() }
+      });
+      if (!res.ok) throw new Error('Failed to generate report');
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = my-transactions-30d.pdf;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('Download complete');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
