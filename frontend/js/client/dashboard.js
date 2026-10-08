@@ -244,7 +244,7 @@ export async function renderDashboard() {
     try {
       toast.info('Generating PDF report...');
       const res = await fetch('/api/client/export?range=30d', {
-        headers: { 'Authorization': Bearer  + store.getToken() }
+        headers: { 'Authorization': 'Bearer ' + store.getToken() }
       });
       if (!res.ok) throw new Error('Failed to generate report');
       
@@ -252,7 +252,7 @@ export async function renderDashboard() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = my-transactions-30d.pdf;
+      a.download = 'my-transactions-30d.pdf';
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
