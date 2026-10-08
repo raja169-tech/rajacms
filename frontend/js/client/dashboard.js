@@ -1,4 +1,4 @@
-import { api } from '../core/api.js';
+﻿import { api } from '../core/api.js';
 import { formatINR, formatDateTime, timeUntil } from '../core/ui.js';
 import { getCurrentUser } from '../core/auth.js';
 
@@ -16,28 +16,28 @@ export async function renderDashboard() {
     <!-- Balance Hero Card -->
     <div class="client-card mb-4" id="balance-card" style="background: linear-gradient(135deg, #0f172a, #1e3a5f); color: white; border: none;">
       <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; opacity: 0.6; text-transform: uppercase; margin-bottom: 0.5rem;">Total Balance</div>
-      <div style="font-size: 2.8rem; font-weight: 800; letter-spacing: -2px; font-family: monospace; line-height: 1;" id="bal-total">₹ —</div>
+      <div style="font-size: 2.8rem; font-weight: 800; letter-spacing: -2px; font-family: monospace; line-height: 1;" id="bal-total">â‚¹ â€”</div>
       
       <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 1rem 0;"></div>
 
       <div style="display: flex; justify-content: space-between;">
         <div>
           <div style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 3px;">Withdrawable</div>
-          <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #10b981;" id="bal-withdrawable">₹ —</div>
+          <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #10b981;" id="bal-withdrawable">â‚¹ â€”</div>
         </div>
         <div style="text-align: center;">
           <div style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 3px;">Pay-In Fee</div>
-          <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #10b981;" id="bal-fee">—</div>
+          <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #10b981;" id="bal-fee">â€”</div>
         </div>
         <div style="text-align: right;">
           <div style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 3px;">On Hold (24h)</div>
-          <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #fbbf24;" id="bal-hold">₹ —</div>
+          <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #fbbf24;" id="bal-hold">â‚¹ â€”</div>
         </div>
       </div>
 
       <!-- Pending withdrawal reservation notice -->
       <div id="pending-withdrawal-notice" style="display:none; margin-top: 0.75rem; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.72rem; color: #fbbf24;">
-        ⏳ <span id="pending-withdrawal-text"></span> is reserved pending employee &amp; admin approval — your total balance is safe.
+        â³ <span id="pending-withdrawal-text"></span> is reserved pending employee &amp; admin approval â€” your total balance is safe.
       </div>
 
       <div id="unlock-msg" style="font-size: 0.7rem; opacity: 0.5; margin-top: 0.75rem; text-align: center;"></div>
@@ -50,7 +50,7 @@ export async function renderDashboard() {
     <div class="client-card mb-4 hidden" id="capacity-card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
         <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Account Usage</span>
-        <span style="font-size: 0.8rem; font-weight: 700; color: #0f172a;" id="cap-text">—</span>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #0f172a;" id="cap-text">â€”</span>
       </div>
       <div style="height: 8px; background: #f1f5f9; border-radius: 999px; overflow: hidden;">
         <div id="cap-fill" style="height: 100%; border-radius: 999px; background: #10b981; width: 0%; transition: width 0.6s ease;"></div>
@@ -67,7 +67,7 @@ export async function renderDashboard() {
         box-shadow: 0 4px 12px rgba(16,185,129,0.3);
         transition: transform 0.2s, box-shadow 0.2s;
       " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-        <span style="font-size: 1.75rem;">⬇️</span>
+        <span style="font-size: 1.75rem;">â¬‡ï¸</span>
         <div>
           <div style="font-weight: 700; font-size: 0.95rem;">Deposit</div>
           <div style="font-size: 0.7rem; opacity: 0.8;">Pay-In Request</div>
@@ -80,7 +80,7 @@ export async function renderDashboard() {
         box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         transition: transform 0.2s, box-shadow 0.2s;
       " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-        <span style="font-size: 1.75rem;">⬆️</span>
+        <span style="font-size: 1.75rem;">â¬†ï¸</span>
         <div>
           <div style="font-weight: 700; font-size: 0.95rem;">Withdraw</div>
           <div style="font-size: 0.7rem; color: #64748b;">Pay-Out Request</div>
@@ -106,7 +106,7 @@ export async function renderDashboard() {
 
     <!-- Footer Credit -->
     <div style="text-align: center; padding: 1.5rem 0 0.5rem; font-size: 0.72rem; color: #94a3b8; letter-spacing: 0.01em;">
-      Made by <span style="color: #e53e3e; font-weight: 700;">Elvrix TechSolutions</span>™ 2026
+      Made by <span style="color: #e53e3e; font-weight: 700;">Elvrix TechSolutions</span>â„¢ 2026
     </div>
   `;
 
@@ -120,9 +120,9 @@ export async function renderDashboard() {
     data.recent_transactions.forEach(tx => {
       if ((tx.status === 'approved' || tx.status === 'rejected') && !notifiedTxns.includes(tx.id)) {
         if (tx.status === 'approved') {
-            toast.success(Your  + (tx.type === 'pay_in' ? 'Deposit' : 'Withdrawal') +  of ? + tx.gross_amount +  has been approved!);
+            toast.success('Your ' + (tx.type === 'pay_in' ? 'Deposit' : 'Withdrawal') + ' of ₹' + tx.gross_amount + ' has been approved!');
         } else {
-            toast.error(Your  + (tx.type === 'pay_in' ? 'Deposit' : 'Withdrawal') +  of ? + tx.gross_amount +  was declined.);
+            toast.error('Your ' + (tx.type === 'pay_in' ? 'Deposit' : 'Withdrawal') + ' of ₹' + tx.gross_amount + ' was declined.');
         }
         notifiedTxns.push(tx.id);
         newNotifications = true;
@@ -140,7 +140,7 @@ export async function renderDashboard() {
     if (data.has_stale_pending) {
       document.getElementById('stale-alert-container').innerHTML = `
         <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 0.75rem; padding: 0.9rem 1rem; margin-bottom: 1rem; display: flex; gap: 0.75rem; align-items: flex-start;">
-          <span style="font-size: 1.2rem;">⚠️</span>
+          <span style="font-size: 1.2rem;">âš ï¸</span>
           <div style="font-size: 0.8rem; color: #92400e; font-weight: 500;">You have Pay-In requests pending for over 12 hours. Please contact support.</div>
         </div>
       `;
@@ -183,7 +183,7 @@ export async function renderDashboard() {
     if (!data.recent_transactions || data.recent_transactions.length === 0) {
       txList.innerHTML = `
         <div style="text-align: center; padding: 2.5rem 1rem; color: #94a3b8;">
-          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📋</div>
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">ðŸ“‹</div>
           <div style="font-weight: 600;">No transactions yet</div>
           <div style="font-size: 0.8rem; margin-top: 0.25rem;">Your deposit and withdrawal history will appear here</div>
         </div>
@@ -207,7 +207,7 @@ export async function renderDashboard() {
               width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
               background: ${isIn ? '#d1fae5' : '#fee2e2'};
               display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
-            ">${isIn ? '⬇️' : '⬆️'}</div>
+            ">${isIn ? 'â¬‡ï¸' : 'â¬†ï¸'}</div>
             <div style="min-width: 0;">
               <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 2px;">${isIn ? 'Deposit' : 'Withdrawal'}</div>
               <div style="font-size: 0.7rem; color: #94a3b8;">${formatDateTime(tx.created_at)}</div>
@@ -233,7 +233,7 @@ export async function renderDashboard() {
     console.error(err);
     document.getElementById('tx-list').innerHTML = `
       <div style="text-align: center; padding: 2rem; color: #ef4444;">
-        <div style="font-size: 2rem;">⚠️</div>
+        <div style="font-size: 2rem;">âš ï¸</div>
         <div style="font-size: 0.85rem; margin-top: 0.5rem;">Failed to load dashboard data</div>
       </div>
     `;
