@@ -109,9 +109,9 @@ export async function renderQueue(container) {
           </div>
           <div class="flex-1" id="proof-section">
             <div class="text-xs text-muted mb-2">Payment Proof</div>
-            <div id="proof-container" style="height:200px;border:1px solid var(--color-border);border-radius:0.5rem;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f1f5f9;">
+            <div id="proof-container" style="position:relative;height:220px;max-height:220px;border:1px solid var(--color-border);border-radius:0.5rem;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f1f5f9;">
               <span class="text-muted text-sm" id="proof-loading">Loading image...</span>
-              <img id="r-proof-img" class="hidden" style="width:100%;height:100%;object-fit:contain;cursor:pointer;" onclick="window.open(this.src,'_blank')">
+              <img id="r-proof-img" class="hidden" style="max-width:100%;max-height:220px;width:auto;height:auto;object-fit:contain;cursor:pointer;display:block;" onclick="window.open(this.src,'_blank')">
             </div>
           </div>
         </div>
