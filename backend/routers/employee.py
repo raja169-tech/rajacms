@@ -255,3 +255,10 @@ async def get_denomination(txn_id: str, current_user: dict = StaffUser):
     if not txn.data:
         raise HTTPException(status_code=404, detail="Transaction not found")
     return {"denomination": txn.data.get("denomination"), "gross_amount": txn.data["gross_amount"], "status": txn.data["status"]}
+
+@router.get("/queue/count")
+async def get_queue_count(current_user: dict = StaffUser):
+    """Returns count of pending transactions for the sidebar badge."""
+    db = get_supabase()
+    res = db.table("transactions").select("id", count="exact").eq("status", "pending").execute()
+    return {"pending_count": res.count if res.count is not None else 0}
