@@ -182,3 +182,76 @@ async def export_report(
 
 
 
+
+
+# ==========================================
+# Denomination (DENO) - Employee submits note count
+# ==========================================
+
+class DenominationRequest(BaseModel):
+    note_2000: int = Field(0, ge=0)
+    note_500:  int = Field(0, ge=0)
+    note_200:  int = Field(0, ge=0)
+    note_100:  int = Field(0, ge=0)
+    note_50:   int = Field(0, ge=0)
+    note_20:   int = Field(0, ge=0)
+    note_10:   int = Field(0, ge=0)
+    note_5:    int = Field(0, ge=0)
+    note_2:    int = Field(0, ge=0)
+    note_1:    int = Field(0, ge=0)
+
+
+@router.post("/transactions/{txn_id}/denomination")
+async def submit_denomination(
+    txn_id: str,
+    body: DenominationRequest,
+    current_user: dict = StaffUser,
+):
+    """
+    Employee submits a denomination (note count) for a pending transaction.
+    Validates that the denomination total matches the transaction gross_amount.
+    Sets status -> employee_approved so admin can act next.
+    """
+    db = get_supabase()
+    txn = db.table("transactions").select("id, gross_amount, status, denomination").eq("id", txn_id).maybe_single().execute()
+
+    if not txn.data:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    if txn.data["status"] not in ("pending",):
+        raise HTTPException(status_code=400, detail=f"Transaction is already '{txn.data['status']}' - denomination can only be submitted for pending transactions.")
+
+    # Calculate denomination total
+    deno = body.dict()
+    note_values = {
+        "note_2000": 2000, "note_500": 500, "note_200": 200,
+        "note_100": 100,   "note_50": 50,   "note_20": 20,
+        "note_10": 10,     "note_5": 5,     "note_2": 2, "note_1": 1,
+    }
+    deno_total = sum(deno[k] * note_values[k] for k in note_values)
+    gross = float(txn.data["gross_amount"])
+
+    if round(deno_total, 2) != round(gross, 2):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Denomination total ({deno_total}) does not match transaction amount ({gross}). Please recount."
+        )
+
+    # Store denomination and move to employee_approved
+    db.table("transactions").update({
+        "denomination": deno,
+        "status": "employee_approved",
+        "verified_by": current_user["sub"],
+    }).eq("id", txn_id).execute()
+
+    return {"message": "Denomination submitted. Transaction is now pending admin approval.", "deno_total": deno_total}
+
+
+@router.get("/transactions/{txn_id}/denomination")
+async def get_denomination(txn_id: str, current_user: dict = StaffUser):
+    """Returns the stored denomination for a transaction."""
+    db = get_supabase()
+    txn = db.table("transactions").select("denomination, gross_amount, status").eq("id", txn_id).maybe_single().execute()
+    if not txn.data:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return {"denomination": txn.data.get("denomination"), "gross_amount": txn.data["gross_amount"], "status": txn.data["status"]}
