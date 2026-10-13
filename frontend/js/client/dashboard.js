@@ -1,5 +1,5 @@
-﻿import { api } from '../core/api.js';
-import { formatINR, formatDateTime, timeUntil } from '../core/ui.js';
+import { api } from '../core/api.js';
+import { formatINR, formatDateTime } from '../core/ui.js';
 import { getCurrentUser } from '../core/auth.js';
 
 export async function renderDashboard() {
@@ -25,13 +25,9 @@ export async function renderDashboard() {
           <div style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 3px;">Withdrawable</div>
           <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #10b981;" id="bal-withdrawable">...</div>
         </div>
-        <div style="text-align: center;">
+        <div style="text-align: right;">
           <div style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 3px;">Pay-In Fee</div>
           <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #10b981;" id="bal-fee">...</div>
-        </div>
-        <div style="text-align: right;">
-          <div style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 3px;">On Hold</div>
-          <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #fbbf24;" id="bal-hold">...</div>
         </div>
       </div>
 
@@ -40,7 +36,6 @@ export async function renderDashboard() {
         <strong>Note:</strong> <span id="pending-withdrawal-text"></span> is reserved pending employee &amp; admin approval - your total balance is safe.
       </div>
 
-      <div id="unlock-msg" style="font-size: 0.7rem; opacity: 0.5; margin-top: 0.75rem; text-align: center;"></div>
     </div>
 
     <!-- Stale Alert -->
@@ -149,23 +144,16 @@ export async function renderDashboard() {
     // Balances & Fee
     document.getElementById('bal-total').textContent = formatINR(data.total_balance);
     document.getElementById('bal-withdrawable').textContent = formatINR(data.withdrawable_now);
-    document.getElementById('bal-hold').textContent = formatINR(data.on_hold_amount);
     document.getElementById('bal-fee').textContent = data.fee_percentage + '%';
 
-    // Show pending withdrawal reservation notice if there's a difference
-    const pendingWithdrawal = data.total_balance - data.withdrawable_now - data.on_hold_amount;
+    // Show pending withdrawal reservation notice if funds are reserved
+    const pendingWithdrawal = data.total_balance - data.withdrawable_now;
     if (pendingWithdrawal > 0.01) {
       const notice = document.getElementById('pending-withdrawal-notice');
-      document.getElementById('pending-withdrawal-text').textContent = formatINR(pendingWithdrawal);
-      notice.style.display = 'block';
-    }
-
-    if (data.next_unlock_at) {
-      document.getElementById('unlock-msg').textContent = `Next unlock ${timeUntil(data.next_unlock_at)}`;
-      document.getElementById('unlock-msg').style.display = 'block';
-    } else {
-      document.getElementById('unlock-msg').textContent = '';
-      document.getElementById('unlock-msg').style.display = 'none';
+      if (notice) {
+        document.getElementById('pending-withdrawal-text').textContent = formatINR(pendingWithdrawal);
+        notice.style.display = 'block';
+      }
     }
 
     // Capacity
