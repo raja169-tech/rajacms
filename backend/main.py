@@ -19,7 +19,7 @@ settings = get_settings()
 app = FastAPI(
     title="Raja CMS API",
     description="Internal PWA backend for managing client cash ledgers.",
-    version="1.0.0",
+    version="1.0.1",
     docs_url="/api/docs" if not settings.is_production else None,
     redoc_url="/api/redoc" if not settings.is_production else None,
 )
