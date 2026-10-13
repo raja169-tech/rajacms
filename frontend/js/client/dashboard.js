@@ -30,7 +30,7 @@ export async function renderDashboard() {
           <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #10b981;" id="bal-fee">...</div>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 3px;">On Hold (24h)</div>
+          <div style="font-size: 0.7rem; opacity: 0.6; margin-bottom: 3px;">On Hold</div>
           <div style="font-size: 1rem; font-weight: 700; font-family: monospace; color: #fbbf24;" id="bal-hold">...</div>
         </div>
       </div>
@@ -162,6 +162,10 @@ export async function renderDashboard() {
 
     if (data.next_unlock_at) {
       document.getElementById('unlock-msg').textContent = `Next unlock ${timeUntil(data.next_unlock_at)}`;
+      document.getElementById('unlock-msg').style.display = 'block';
+    } else {
+      document.getElementById('unlock-msg').textContent = '';
+      document.getElementById('unlock-msg').style.display = 'none';
     }
 
     // Capacity

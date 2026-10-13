@@ -9,7 +9,7 @@ Responsibilities:
 - Client balance derivation (total, withdrawable, on-hold, next_unlock_at)
 - Account limit enforcement (per-client cap)
 - Bank account capacity enforcement (including pending reservations)
-- 24-hour maturity hold enforcement
+- Immediate withdrawal availability (no maturity hold or time limit)
 - Pay-In submission and approval
 - Pay-Out submission and approval
 - Stale pending notification check (> 12 hours)
@@ -52,16 +52,16 @@ def calculate_pay_in_amounts(gross_amount: Decimal, fee_percentage: Decimal) -> 
 
 # ─── Balance Calculation ──────────────────────────────────────────────────────
 
-async def get_client_balance(client_id: str) -> dict:
+async def get_client_balance(client_id: str, exclude_txn_id: str | None = None) -> dict:
     """
     Compute a client's balance metrics entirely from the immutable transaction log.
     Never relies on a cached/stored balance column.
 
     Returns:
         total_balance     — SUM(net_amount pay_in approved) - SUM(gross_amount pay_out approved)
-        withdrawable_now  — matured pay_ins - approved pay_outs - pending pay_outs
-        on_hold_amount    — total_balance - withdrawable_now
-        next_unlock_at    — ISO timestamp of the earliest still-locked approved pay_in (or None)
+        withdrawable_now  — available funds to withdraw (approved pay_ins minus approved and pending pay_outs)
+        on_hold_amount    — funds on hold (reserved pending withdrawal requests)
+        next_unlock_at    — None (no hold time limit on withdrawals)
         has_stale_pending — True if any Pay-In has been pending > 12 hours
     """
     db = get_supabase()
@@ -69,14 +69,13 @@ async def get_client_balance(client_id: str) -> dict:
     now_iso = now.isoformat()
 
     txns = db.table("transactions").select(
-        "type, status, gross_amount, net_amount, matures_at, created_at"
+        "id, type, status, gross_amount, net_amount, matures_at, created_at"
     ).eq("client_id", client_id).execute()
 
     rows = txns.data or []
 
     total_balance = Decimal("0.00")
     withdrawable = Decimal("0.00")
-    next_unlock_at = None
     has_stale_pending = False
 
     for row in rows:
@@ -84,25 +83,22 @@ async def get_client_balance(client_id: str) -> dict:
         s = row["status"]
         gross = Decimal(str(row["gross_amount"]))
         net = Decimal(str(row["net_amount"]))
-        matures_at = row.get("matures_at")
         created_at_str = row.get("created_at", "")
 
         if t == "pay_in" and s == "approved":
             total_balance += net
-            if matures_at and matures_at <= now_iso:
-                withdrawable += net
-            elif matures_at:
-                # Still locked — track earliest unlock
-                if next_unlock_at is None or matures_at < next_unlock_at:
-                    next_unlock_at = matures_at
+            # Immediate withdrawal allowed — no time limit or lock
+            withdrawable += net
 
         elif t == "pay_out" and s == "approved":
             total_balance -= gross
             withdrawable -= gross
 
         elif t == "pay_out" and s in ("pending", "employee_approved"):
-            # Reserve pending/employee_approved pay_outs against withdrawable
-            withdrawable -= gross
+            # Reserve pending/employee_approved pay_outs against withdrawable,
+            # except when re-validating this specific transaction during approval
+            if not (exclude_txn_id and row.get("id") == exclude_txn_id):
+                withdrawable -= gross
 
         # Stale pending check (pay_in pending or employee_approved > 12 hours)
         if t == "pay_in" and s in ("pending", "employee_approved") and created_at_str:
@@ -121,7 +117,7 @@ async def get_client_balance(client_id: str) -> dict:
         "total_balance": float(total_balance),
         "withdrawable_now": float(withdrawable),
         "on_hold_amount": float(on_hold),
-        "next_unlock_at": next_unlock_at,
+        "next_unlock_at": None,
         "has_stale_pending": has_stale_pending,
     }
 
@@ -170,9 +166,9 @@ async def _check_bank_capacity(bank_account_id: str, gross_amount: Decimal) -> N
         )
 
 
-async def _check_withdrawable(client_id: str, requested_amount: Decimal) -> None:
+async def _check_withdrawable(client_id: str, requested_amount: Decimal, exclude_txn_id: str | None = None) -> None:
     """Raise 403 if requested withdrawal exceeds the client's withdrawable balance."""
-    balance_info = await get_client_balance(client_id)
+    balance_info = await get_client_balance(client_id, exclude_txn_id=exclude_txn_id)
     withdrawable = Decimal(str(balance_info["withdrawable_now"]))
     if requested_amount > withdrawable:
         raise HTTPException(
@@ -296,22 +292,8 @@ async def approve_pay_in(
 
     approved_txn = result.data[0]
 
-    # Calculate matures_at = next midnight IST after approval time
+    # No maturity hold — funds are immediately available for withdrawal
     matures_at = None
-    if new_status == "approved":
-        from datetime import timedelta
-        # IST = UTC+5:30
-        IST = timezone(timedelta(hours=5, minutes=30))
-        processed_at = datetime.fromisoformat(now_iso)
-        processed_at_ist = processed_at.astimezone(IST)
-        # Next midnight in IST = start of the next calendar day in IST
-        next_midnight_ist = (processed_at_ist + timedelta(days=1)).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        # Store as UTC ISO string
-        matures_at = next_midnight_ist.astimezone(timezone.utc).isoformat()
-        db.table("transactions").update({"matures_at": matures_at}).eq("id", txn_id).execute()
-        approved_txn["matures_at"] = matures_at
 
     await log_action(
         actor_id=actor_id,
@@ -322,7 +304,7 @@ async def approve_pay_in(
         meta={
             "gross_amount": float(gross_amount),
             "net_amount": float(net_amount),
-            "matures_at": matures_at,
+            "matures_at": None,
             "client_id": txn["client_id"],
         },
         ip_address=ip_address,
@@ -447,8 +429,8 @@ async def approve_pay_out(
             headers={"X-Error-Code": "TXN_ALREADY_PROCESSED"},
         )
 
-    # Re-validate withdrawable at approval moment
-    await _check_withdrawable(txn["client_id"], Decimal(str(txn["gross_amount"])))
+    # Re-validate withdrawable at approval moment (excluding this txn)
+    await _check_withdrawable(txn["client_id"], Decimal(str(txn["gross_amount"])), exclude_txn_id=txn_id)
 
     new_status = "employee_approved" if actor_role == "employee" else "approved"
 

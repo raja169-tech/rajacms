@@ -41,9 +41,9 @@ async def client_dashboard(current_user: dict = ClientUser):
 
     Fields:
         total_balance     — all approved pay_ins minus all approved pay_outs
-        withdrawable_now  — matured pay_ins minus pay_outs (approved + pending)
-        on_hold_amount    — total_balance - withdrawable_now (funds in 24h hold)
-        next_unlock_at    — ISO timestamp when the next batch of funds unlocks
+        withdrawable_now  — available funds to withdraw (approved pay_ins minus approved + pending pay_outs)
+        on_hold_amount    — total_balance - withdrawable_now (reserved pending withdrawals)
+        next_unlock_at    — None (no hold time limit)
         deposit_headroom  — how much more the client can deposit before hitting account_limit
         has_stale_pending — True if any Pay-In has been pending > 12 hours
     """
@@ -152,8 +152,9 @@ async def submit_pay_out_request(
     """
     Submit a Pay-Out (withdrawal) request.
 
-    - amount must not exceed withdrawable_now (matured funds minus pending requests)
+    - amount must not exceed withdrawable_now (available funds minus pending requests)
     - No fee on Pay-Out — client receives exactly the requested amount
+    - No time limit — client can withdraw anytime
     - Validated server-side; disabled button in UI is not a security control
     """
     return await submit_pay_out(
