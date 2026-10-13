@@ -243,7 +243,7 @@ async def approve_pay_in(
 
     Uses conditional update (WHERE status='pending') for concurrency safety.
     Re-validates account_limit and bank_capacity at approval time.
-    Sets matures_at = next midnight IST after approval time.
+    Funds become immediately available for withdrawal upon approval.
     """
     db = get_supabase()
 
@@ -373,7 +373,7 @@ async def submit_pay_out(
 ) -> dict:
     """
     Submit a Pay-Out request.
-    Validates: requested_amount <= withdrawable_now (matured, accounting for pending requests).
+    Validates: requested_amount <= withdrawable_now (accounting for pending requests).
     No fee on Pay-Out — client receives the exact requested_amount.
     """
     await _check_withdrawable(client_id, requested_amount)
