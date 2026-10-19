@@ -1,5 +1,5 @@
 import { api } from '../core/api.js';
-import { formatINR, formatDateTime } from '../core/ui.js';
+import { formatINR, formatDateTime, toast } from '../core/ui.js';
 import { getCurrentUser } from '../core/auth.js';
 
 export async function renderDashboard() {
