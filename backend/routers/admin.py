@@ -65,6 +65,7 @@ class UpdateBankAccountRequest(BaseModel):
 
 class ApproveRequest(BaseModel):
     admin_notes: Optional[str] = None
+    override_amount: Optional[float] = Field(None, gt=0, description="Admin-edited gross amount (optional)")
 
 
 class RejectRequest(BaseModel):
@@ -432,11 +433,15 @@ async def approve_transaction(
     request: Request,
     current_user: dict = AdminUser,
 ):
-    """Approve a pending Pay-In or Pay-Out. Detects type automatically."""
+    """Approve a pending Pay-In or Pay-Out. Detects type automatically.
+    Optionally override the gross amount via body.override_amount.
+    """
     db = get_supabase()
     txn = db.table("transactions").select("type").eq("id", txn_id).maybe_single().execute()
     if not txn.data:
         raise HTTPException(status_code=404, detail="Transaction not found")
+
+    override = Decimal(str(body.override_amount)) if body.override_amount else None
 
     if txn.data["type"] == "pay_in":
         return await approve_pay_in(
@@ -445,6 +450,7 @@ async def approve_transaction(
             actor_role=current_user["role"],
             admin_notes=body.admin_notes,
             ip_address=request.client.host if request.client else None,
+            override_gross_amount=override,
         )
     else:
         return await approve_pay_out(
@@ -453,6 +459,7 @@ async def approve_transaction(
             actor_role=current_user["role"],
             admin_notes=body.admin_notes,
             ip_address=request.client.host if request.client else None,
+            override_gross_amount=override,
         )
 
 

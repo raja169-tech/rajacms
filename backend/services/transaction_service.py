@@ -237,6 +237,7 @@ async def approve_pay_in(
     actor_role: str,
     admin_notes: str | None = None,
     ip_address: str | None = None,
+    override_gross_amount: Decimal | None = None,
 ) -> dict:
     """
     Approve a pending Pay-In.
@@ -244,6 +245,9 @@ async def approve_pay_in(
     Uses conditional update (WHERE status='pending') for concurrency safety.
     Re-validates account_limit and bank_capacity at approval time.
     Funds become immediately available for withdrawal upon approval.
+
+    If override_gross_amount is provided, the admin has edited the amount
+    and net_amount / fee_amount are recalculated accordingly.
     """
     db = get_supabase()
 
@@ -263,25 +267,30 @@ async def approve_pay_in(
             headers={"X-Error-Code": "TXN_ALREADY_PROCESSED"},
         )
 
-    net_amount = Decimal(str(txn["net_amount"]))
-    gross_amount = Decimal(str(txn["gross_amount"]))
+    gross_amount = override_gross_amount if override_gross_amount is not None else Decimal(str(txn["gross_amount"]))
+    fee_pct = Decimal(str(txn["fee_percentage"]))
+    fee_amount = (gross_amount * fee_pct / Decimal("100")).quantize(Decimal("0.01"))
+    net_amount = gross_amount - fee_amount
 
     # Re-validate guards at approval time (balances may have changed since submission)
     await _check_account_limit(txn["client_id"], net_amount)
     await _check_bank_capacity(txn["bank_account_id"], gross_amount)
 
-    # Conditional update — only succeeds if status is still 'pending'
-    # (Removed missing RPC call to avoid 500 error)
-
     new_status = "employee_approved" if actor_role == "employee" else "approved"
     now_iso = datetime.now(timezone.utc).isoformat()
-    result = db.table("transactions").update({
+
+    update_payload = {
         "status": new_status,
         "processed_by": actor_id,
         "processed_at": now_iso,
         "matures_at": None,
         "admin_notes": admin_notes,
-    }).eq("id", txn_id).in_("status", valid_old_statuses).execute()
+        "gross_amount": str(gross_amount),
+        "fee_amount": str(fee_amount),
+        "net_amount": str(net_amount),
+    }
+
+    result = db.table("transactions").update(update_payload).eq("id", txn_id).in_("status", valid_old_statuses).execute()
 
     if not result.data:
         raise HTTPException(
@@ -291,9 +300,6 @@ async def approve_pay_in(
         )
 
     approved_txn = result.data[0]
-
-    # No maturity hold — funds are immediately available for withdrawal
-    matures_at = None
 
     await log_action(
         actor_id=actor_id,
@@ -306,6 +312,7 @@ async def approve_pay_in(
             "net_amount": float(net_amount),
             "matures_at": None,
             "client_id": txn["client_id"],
+            "amount_overridden": override_gross_amount is not None,
         },
         ip_address=ip_address,
     )
@@ -408,10 +415,14 @@ async def approve_pay_out(
     actor_role: str,
     admin_notes: str | None = None,
     ip_address: str | None = None,
+    override_gross_amount: Decimal | None = None,
 ) -> dict:
     """
     Approve a pending Pay-Out.
     Re-validates withdrawable balance at approval time (double-check at approval).
+
+    If override_gross_amount is provided, the admin has edited the withdrawal amount.
+    Pay-Out has no fee, so net_amount = gross_amount in all cases.
     """
     db = get_supabase()
     txn_result = db.table("transactions").select("*").eq("id", txn_id).eq("type", "pay_out").maybe_single().execute()
@@ -429,8 +440,12 @@ async def approve_pay_out(
             headers={"X-Error-Code": "TXN_ALREADY_PROCESSED"},
         )
 
+    gross_amount = override_gross_amount if override_gross_amount is not None else Decimal(str(txn["gross_amount"]))
+    # Pay-Out has no fee — net equals gross
+    net_amount = gross_amount
+
     # Re-validate withdrawable at approval moment (excluding this txn)
-    await _check_withdrawable(txn["client_id"], Decimal(str(txn["gross_amount"])), exclude_txn_id=txn_id)
+    await _check_withdrawable(txn["client_id"], gross_amount, exclude_txn_id=txn_id)
 
     new_status = "employee_approved" if actor_role == "employee" else "approved"
 
@@ -440,6 +455,9 @@ async def approve_pay_out(
         "processed_by": actor_id,
         "processed_at": now_iso,
         "admin_notes": admin_notes,
+        "gross_amount": str(gross_amount),
+        "fee_amount": "0.00",
+        "net_amount": str(net_amount),
     }).eq("id", txn_id).in_("status", valid_old_statuses).execute()
 
     if not result.data:
@@ -455,7 +473,11 @@ async def approve_pay_out(
         action="approve_pay_out",
         target_table="transactions",
         target_id=txn_id,
-        meta={"amount": float(txn["gross_amount"]), "client_id": txn["client_id"]},
+        meta={
+            "amount": float(gross_amount),
+            "client_id": txn["client_id"],
+            "amount_overridden": override_gross_amount is not None,
+        },
         ip_address=ip_address,
     )
     return result.data[0]

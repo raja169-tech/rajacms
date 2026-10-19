@@ -58,11 +58,19 @@ export async function renderQueue() {
             <div class="text-xs text-muted mb-1">Type</div>
             <div class="mb-3"><span id="r-type" class="badge"></span></div>
             
-            <div class="text-xs text-muted mb-1">Gross Amount</div>
-            <div class="font-mono font-bold text-lg mb-1" id="r-gross"></div>
-            
+            <div class="text-xs text-muted mb-1">Submitted Amount</div>
+            <div class="font-mono text-sm text-muted mb-2" id="r-submitted-amount" style="text-decoration: line-through; color: #94a3b8;"></div>
+
+            <div class="text-xs text-muted mb-1" id="r-gross-label">Gross Amount <span style="color:#f59e0b; font-size:0.7rem;">(editable)</span></div>
+            <div style="display: flex; align-items: center; gap: 0.4rem; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 0.5rem; padding: 0.35rem 0.65rem; margin-bottom: 0.25rem;" id="r-amount-wrapper">
+              <span style="color: #94a3b8; font-weight: 700; font-size: 1rem;">₹</span>
+              <input type="number" id="r-override-amount" min="1" step="0.01"
+                style="border: none; background: transparent; font-size: 1rem; font-weight: 700; font-family: monospace; color: #0f172a; flex: 1; outline: none; width: 100%;">
+            </div>
+            <div id="r-override-hint" class="text-xs mb-3" style="color: #94a3b8;">Clear to use original submitted amount</div>
+
             <div id="fee-breakdown" class="text-xs text-muted mb-3 hidden"></div>
-            
+
             <div class="text-xs text-muted mb-1">Net Amount to Credit</div>
             <div class="font-mono font-bold text-xl text-accent mb-3" id="r-net"></div>
           </div>
@@ -107,16 +115,52 @@ export async function renderQueue() {
     typeBadge.className = `badge badge-${t.type}`;
     typeBadge.textContent = t.type === 'pay_in' ? 'Deposit' : 'Withdrawal';
 
-    document.getElementById('r-gross').textContent = formatINR(t.gross_amount);
-    document.getElementById('r-net').textContent = formatINR(t.net_amount);
+    const grossAmt = parseFloat(t.gross_amount);
+    const feePct = parseFloat(t.fee_percentage || 0);
 
-    const feeDiv = document.getElementById('fee-breakdown');
-    if (t.type === 'pay_in') {
-      feeDiv.textContent = `Fee: ${t.fee_percentage}% (-${formatINR(t.fee_amount)})`;
-      feeDiv.classList.remove('hidden');
-    } else {
-      feeDiv.classList.add('hidden');
+    // Store original submitted amount for display
+    document.getElementById('r-submitted-amount').textContent = formatINR(grossAmt) + ' (submitted)';
+    document.getElementById('r-override-amount').value = grossAmt.toFixed(2);
+
+    // Label adjustment for pay_out (no fee)
+    const grossLabel = document.getElementById('r-gross-label');
+    grossLabel.innerHTML = t.type === 'pay_in'
+      ? 'Gross Amount <span style="color:#f59e0b; font-size:0.7rem;">(editable)</span>'
+      : 'Withdrawal Amount <span style="color:#f59e0b; font-size:0.7rem;">(editable)</span>';
+
+    // Helper: recalculate and display net given a gross
+    function updateNetPreview(gross) {
+      const feeDiv = document.getElementById('fee-breakdown');
+      let net;
+      if (t.type === 'pay_in') {
+        const fee = Math.round(gross * feePct) / 100;
+        net = gross - fee;
+        feeDiv.textContent = `Fee: ${feePct}% (-${formatINR(fee)})`;
+        feeDiv.classList.remove('hidden');
+      } else {
+        net = gross;
+        feeDiv.classList.add('hidden');
+      }
+      document.getElementById('r-net').textContent = formatINR(net);
     }
+
+    updateNetPreview(grossAmt);
+
+    // Live update on input change
+    document.getElementById('r-override-amount').oninput = (e) => {
+      const val = parseFloat(e.target.value);
+      if (val > 0) {
+        updateNetPreview(val);
+        const hint = document.getElementById('r-override-hint');
+        if (val !== grossAmt) {
+          hint.textContent = `⚠ Amount changed from original ${formatINR(grossAmt)}`;
+          hint.style.color = '#f59e0b';
+        } else {
+          hint.textContent = 'Clear to use original submitted amount';
+          hint.style.color = '#94a3b8';
+        }
+      }
+    };
 
     const proofSec = document.getElementById('proof-section');
     const proofImg = document.getElementById('r-proof-img');
@@ -144,13 +188,22 @@ export async function renderQueue() {
     // Hide action buttons if already processed
     // Hide action buttons if already fully processed
     const actions = document.getElementById('review-actions');
-    if (t.status !== 'pending' && t.status !== 'employee_approved') {
+    const isEditable = t.status === 'pending' || t.status === 'employee_approved';
+    if (!isEditable) {
       actions.classList.add('hidden');
       document.getElementById('r-notes').value = t.admin_notes || '';
       document.getElementById('r-notes').disabled = true;
+      // Hide editable amount area for already-processed txns
+      document.getElementById('r-amount-wrapper').style.display = 'none';
+      document.getElementById('r-override-hint').style.display = 'none';
+      document.getElementById('r-submitted-amount').style.display = 'none';
+      document.getElementById('r-gross-label').innerHTML = 'Amount';
     } else {
       actions.classList.remove('hidden');
       document.getElementById('r-notes').disabled = false;
+      document.getElementById('r-amount-wrapper').style.display = '';
+      document.getElementById('r-override-hint').style.display = '';
+      document.getElementById('r-submitted-amount').style.display = '';
     }
 
     showModal('review-modal');
@@ -166,7 +219,20 @@ export async function renderQueue() {
       return;
     }
 
-    const body = action === 'reject' ? { reason: notes } : { admin_notes: notes || null };
+    let body;
+    if (action === 'reject') {
+      body = { reason: notes };
+    } else {
+      body = { admin_notes: notes || null };
+      // Include override_amount only if the admin changed it
+      const overrideInput = document.getElementById('r-override-amount');
+      if (overrideInput) {
+        const overrideVal = parseFloat(overrideInput.value);
+        if (overrideVal > 0) {
+          body.override_amount = overrideVal;
+        }
+      }
+    }
 
     const btns = document.querySelectorAll('#review-actions button');
     btns.forEach(b => b.disabled = true);
